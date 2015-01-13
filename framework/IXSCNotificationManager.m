@@ -13,13 +13,13 @@
  *                 the notification center.
  */
 void _IXSCNotificationCallback( SCDynamicStoreRef store, CFArrayRef changedKeys, void *info ) {	
-	NSEnumerator *keysE = [(NSArray *)changedKeys objectEnumerator];
+	NSEnumerator *keysE = [(__bridge NSArray *)changedKeys objectEnumerator];
 	NSString *key = nil;
 	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	while ( key = [keysE nextObject] ) {		
 		[nc postNotificationName:key 
-							object:(id)info 
-						  userInfo:[(NSDictionary *)SCDynamicStoreCopyValue(store, (CFStringRef) key) autorelease]];
+							object:(__bridge id)info
+						  userInfo:(__bridge NSDictionary *)SCDynamicStoreCopyValue(store, (__bridge CFStringRef) key)];
 	}
 }
 
@@ -29,8 +29,8 @@ void _IXSCNotificationCallback( SCDynamicStoreRef store, CFArrayRef changedKeys,
 - (void)setObservedKeys:(NSArray *)inKeyArray regExes:(NSArray *)inRegExeArray {
 	BOOL success = SCDynamicStoreSetNotificationKeys(
 		dynStore, 
-		(CFArrayRef)inKeyArray,
-		(CFArrayRef)inRegExeArray
+		(__bridge CFArrayRef)inKeyArray,
+		(__bridge CFArrayRef)inRegExeArray
 	);
 	if (!success) NSLog(@"%s desired keys could not be observed.",__FUNCTION__);
 }
@@ -39,11 +39,11 @@ void _IXSCNotificationCallback( SCDynamicStoreRef store, CFArrayRef changedKeys,
 - (id)init {
 	self = [super init];
 	if ( self ) {
-		SCDynamicStoreContext context = { 0, (void *)self, NULL, NULL, NULL };
+		SCDynamicStoreContext context = { 0, (__bridge void *)self, NULL, NULL, NULL };
 		
 		dynStore = SCDynamicStoreCreate(
 			NULL, 
-			(CFStringRef) [[NSBundle mainBundle] bundleIdentifier],
+			(__bridge CFStringRef) [[NSBundle mainBundle] bundleIdentifier],
 			_IXSCNotificationCallback,
 			&context
 		);
@@ -61,8 +61,6 @@ void _IXSCNotificationCallback( SCDynamicStoreRef store, CFArrayRef changedKeys,
 	CFRunLoopRemoveSource([[NSRunLoop currentRunLoop] getCFRunLoop], rlSrc, kCFRunLoopCommonModes);
 	CFRelease(rlSrc);
 	CFRelease(dynStore);
-
-	[super dealloc];
 }
 
 @end
